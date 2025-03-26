@@ -255,55 +255,59 @@ The cipher can, be adapted to an alphabet with any number of letters. All arithm
 
 ## PROGRAM:
 PROGRAM:
-#include <stdio.h> #include <string.h>
-int keymat[3][3] = { { 1, 2, 1 }, { 2, 3, 2 }, { 2, 2, 1 } };
-int invkeymat[3][3] = { { -1, 0, 1 }, { 2, -1, 0 }, { -2, 2, -1 } }; char key[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-char encode(char a, char b, char c) { char ret[4];
-int x, y, z;
-int posa = (int) a - 65; int posb = (int) b - 65; int posc = (int) c - 65;
-x = posa * keymat[0][0] + posb * keymat[1][0] + posc * keymat[2][0];
-y = posa * keymat[0][1] + posb * keymat[1][1] + posc * keymat[2][1];
-z = posa * keymat[0][2] + posb * keymat[1][2] + posc * keymat[2][2]; ret[0] = key[x % 26];
-ret[1] = key[y % 26]; ret[2] = key[z % 26]; ret[3] = '\0';
-return ret;
-}
-char decode(char a, char b, char c) { char ret[4];
-int x, y, z;
-int posa = (int) a - 65; int posb = (int) b - 65; int posc = (int) c - 65;
- 
-x = posa * invkeymat[0][0] + posb * invkeymat[1][0] + posc * invkeymat[2][0];y = posa * invkeymat[0][1] + posb * invkeymat[1][1] + posc * invkeymat[2][1];z = posa
-* invkeymat[0][2] + posb * invkeymat[1][2] + posc * invkeymat[2][2];ret[0] = key[(x % 26 < 0) ? (26 + x % 26) : (x % 26)];
-ret[1] = key[(y % 26 < 0) ? (26 + y % 26) : (y % 26)];
-ret[2] = key[(z % 26 < 0) ? (26 + z % 26) : (z % 26)];
-ret[3] = '\0'; return ret;
-}
-int main() { char msg[1000];
-char enc[1000] = ""; char dec[1000] = ""; int n;
-strcpy(msg, "SecurityLaboratory"); printf("Simulation of Hill Cipher\n"); printf("Input message : %s\n", msg); for (int i = 0; i < strlen(msg); i++) { msg[i] = toupper(msg[i]);
-}
-// Remove spaces
-n = strlen(msg) % 3;
-// Append padding text X if (n != 0) {
-for (int i = 1; i <= (3 - n); i++) {
-strcat(msg, "X");
-}
-}
-printf("Padded message : %s\n", msg); for (int i = 0; i < strlen(msg); i += 3) { char a = msg[i];
-char b = msg[i + 1]; char c = msg[i + 2];
-strcat(enc, encode(a, b, c));
-}
-printf("Encoded message : %s\n", enc); for (int i = 0; i < strlen(enc); i += 3) { char a = enc[i];
-char b = enc[i + 1]; char c = enc[i + 2];
-strcat(dec, decode(a, b, c));
- 
-}
-printf("Decoded message : %s\n", dec); return 0;
-}
+```
+import numpy as np
+
+def mod_inverse(a, m):
+    for i in range(1, m):
+        if (a * i) % m == 1:
+            return i
+    return None
+
+def matrix_mod_inv(matrix, mod):
+    det = int(np.round(np.linalg.det(matrix)))
+    det_inv = mod_inverse(det % mod, mod)
+    if det_inv is None:
+        raise ValueError("Matrix is not invertible")
+    adjugate = np.round(det * np.linalg.inv(matrix)).astype(int) % mod
+    return (det_inv * adjugate) % mod
+
+def text_to_numbers(text):
+    return [ord(char) - 65 for char in text]
+
+def numbers_to_text(numbers):
+    return ''.join(chr((num % 26) + 65) for num in numbers)
+
+def hill_cipher_encrypt(plaintext, key_matrix):
+    plaintext = plaintext.upper().replace(" ", "")
+    while len(plaintext) % 3 != 0:
+        plaintext += 'X'
+    plaintext_numbers = text_to_numbers(plaintext)
+    plaintext_matrix = np.array(plaintext_numbers).reshape(-1, 3).T
+    encrypted_matrix = (np.dot(key_matrix, plaintext_matrix) % 26).T
+    return numbers_to_text(encrypted_matrix.flatten())
+
+def hill_cipher_decrypt(ciphertext, key_matrix):
+    key_matrix_inv = matrix_mod_inv(key_matrix, 26)
+    ciphertext_numbers = text_to_numbers(ciphertext)
+    ciphertext_matrix = np.array(ciphertext_numbers).reshape(-1, 3).T
+    decrypted_matrix = (np.dot(key_matrix_inv, ciphertext_matrix) % 26).T
+    return numbers_to_text(decrypted_matrix.flatten())
+
+key_matrix = np.array([[1, 2, 1], [2, 3, 2], [2, 2, 1]])
+plaintext = input("Enter plaintext: ")
+ciphertext = hill_cipher_encrypt(plaintext, key_matrix)
+print("Encrypted text:", ciphertext)
+decrypted_text = hill_cipher_decrypt(ciphertext, key_matrix)
+print("Decrypted text:", decrypted_text)
+```
 
 
 ## OUTPUT:
 OUTPUT:
 Simulating Hill Cipher
+![Screenshot 2025-03-26 083753](https://github.com/user-attachments/assets/93eb3f23-4e2c-433c-accc-162eb2c89f0a)
+
 
 
 Input Message : SecurityLaboratory
